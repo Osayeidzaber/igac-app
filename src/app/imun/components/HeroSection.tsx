@@ -101,15 +101,15 @@ export default function HeroSection() {
                     />
                 </motion.div>
 
-                {/* Monumental Single Line Title */}
+                {/* Monumental Title */}
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 1.5, delay: 0.3, ease: "easeOut" }}
                     className="text-center z-30 w-full px-2"
                 >
-                    <h1 className="font-primary font-bold text-2xl sm:text-3xl md:text-5xl lg:text-6xl xl:text-[70px] text-transparent bg-clip-text bg-gradient-to-b from-[#ffedb3] via-[#f2c45f] to-[#cca63b] leading-[1.2] tracking-[0.05em] md:tracking-[0.1em] uppercase whitespace-nowrap">
-                        IMPERIAL MODEL UNITED NATIONS
+                    <h1 className="font-primary font-bold text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-[70px] text-transparent bg-clip-text bg-gradient-to-b from-[#ffedb3] via-[#f2c45f] to-[#cca63b] leading-[1.2] tracking-[0.05em] md:tracking-[0.1em] uppercase whitespace-normal sm:whitespace-nowrap">
+                        IMPERIAL MODEL <br className="block sm:hidden" /> UNITED NATIONS
                     </h1>
                 </motion.div>
 
