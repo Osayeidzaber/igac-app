@@ -47,6 +47,7 @@ export const Reveal = ({
                 initial="hidden"
                 animate={mainControls}
                 transition={{ duration, delay, ease: "easeOut" }}
+                className="will-change-transform transform-gpu"
             >
                 {children}
             </motion.div>

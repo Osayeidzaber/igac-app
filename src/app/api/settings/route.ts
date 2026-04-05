@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
 import { getServiceSupabase, isSupabaseReady } from "@/lib/supabase";
 import { verifyAdmin, unauthorizedResponse } from "@/lib/admin-auth";
 
@@ -28,6 +29,21 @@ const DEFAULTS: Record<string, unknown> = {
   join_form_url: "https://forms.gle/vTMVqN637Q5QGmXcA",
   register_url: "",
   announcement: "",
+  imun_eb_open: false,
+  imun_del_open: true,
+  imun_ca_open: true,
+  imun_eb_url: "",
+  imun_del_url: "https://docs.google.com/forms/d/e/1FAIpQLScXGZ1D1S17Q3eRz5T5J6h2K4F6nN6x8G1lK0k4J4Pz9_W_1w/viewform",
+  imun_ca_url: "https://docs.google.com/forms/d/e/1FAIpQLSd9W8A97XQXYx7rVw8J9Q61lQ_wOW2Q7P1D4PzE4B7vQ5Vxw/viewform",
+  imun_registration_deadline: "",
+  imun_info_date_value: "Secret",
+  imun_info_date_sub: "Will be revealed soon",
+  imun_info_venue_value: "To Be Announced",
+  imun_info_venue_sub: "A Premium Location",
+  imun_info_schedule_value: "In Preparation",
+  imun_info_schedule_sub: "Curating the agenda",
+  imun_info_band_value: "Classified",
+  imun_info_band_sub: "An exclusive performance",
 };
 
 // GET — Fetch site settings (public for basic, admin for all)
@@ -69,6 +85,18 @@ export async function PUT(request: NextRequest) {
     'stat_total_events', 'stat_total_delegates', 'stat_years_active',
     'maintenance_mode', 'registration_open', 'recruitment_open',
     'join_form_url', 'register_url', 'announcement',
+    'imun_eb_open', 'imun_del_open', 'imun_ca_open',
+    'imun_eb_url', 'imun_del_url', 'imun_ca_url', 'imun_registration_deadline',
+    'imun_info_date_value', 'imun_info_date_sub',
+    'imun_info_venue_value', 'imun_info_venue_sub',
+    'imun_info_schedule_value', 'imun_info_schedule_sub',
+    'imun_info_band_value', 'imun_info_band_sub',
+    'imun_committees_timer',
+    'imun_academic_venue_secret', 'imun_academic_venue_name', 'imun_academic_venue_desc', 'imun_academic_venue_image',
+    'imun_closing_venue_secret', 'imun_closing_venue_name', 'imun_closing_venue_desc', 'imun_closing_venue_image',
+    'imun_day3_gala_access', 'imun_day3_gala_desc',
+    'imun_decorum_title', 'imun_decorum_desc',
+    'imun_investment_title', 'imun_investment_desc'
   ];
 
   const updateData: Record<string, unknown> = { id: "main" };
@@ -116,6 +144,9 @@ export async function PUT(request: NextRequest) {
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
+
+  // Clear cache for the whole site instantly so the public IMUN page shows updates
+  revalidatePath('/', 'layout');
 
   return NextResponse.json({ ...DEFAULTS, ...data });
 }

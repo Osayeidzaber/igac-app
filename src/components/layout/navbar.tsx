@@ -6,21 +6,17 @@ import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
-import { Menu, X } from "lucide-react";
+import { Menu, X, ArrowRight } from "lucide-react";
 
 import { navLinks } from "@/config/site-data";
 
 export function Navbar() {
     const [isScrolled, setIsScrolled] = useState(false);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-    const [isHovered, setIsHovered] = useState(false);
     const pathname = usePathname();
 
     useEffect(() => {
-        const handleScroll = () => {
-            setIsScrolled(window.scrollY > 20);
-        };
-
+        const handleScroll = () => setIsScrolled(window.scrollY > 20);
         window.addEventListener("scroll", handleScroll);
         return () => window.removeEventListener("scroll", handleScroll);
     }, []);
@@ -31,24 +27,22 @@ export function Navbar() {
 
     return (
         <>
-            <header
-                onMouseEnter={() => setIsHovered(true)}
-                onMouseLeave={() => setIsHovered(false)}
+            <motion.header
+                initial={{ y: -100 }}
+                animate={{ y: 0 }}
+                transition={{ duration: 0.6, ease: "easeOut" }}
                 className={cn(
-                    "fixed top-0 left-0 right-0 z-50 transition-all duration-500 ease-in-out",
-                    // Base state: No border at all
-                    "border-b-0",
+                    "fixed top-4 left-1/2 -translate-x-1/2 w-[95%] max-w-6xl z-50 transition-all duration-500 rounded-[2rem]",
                     isScrolled
-                        ? "bg-background/70 backdrop-blur-xl py-3 shadow-sm"
-                        : "bg-transparent py-6",
-                    // Apply border ONLY on hover when scrolled, or globally if desired
-                    // The user wants "when we hover then the line shows"
-                    isHovered && "border-b border-white/10"
+                        ? "bg-[#111111]/80 backdrop-blur-xl border border-white/10 shadow-[0_8px_30px_rgb(0,0,0,0.5)] py-3"
+                        : "bg-transparent border border-transparent py-4"
                 )}
             >
-                <div className="container mx-auto px-6 flex items-center justify-between">
-                    <Link href="/" className="relative z-50 flex items-center gap-3 group/logo">
-                        <div className="relative w-10 h-10 md:w-11 md:h-11 transition-transform group-hover/logo:scale-110 duration-300">
+                <div className="px-6 md:px-8 flex items-center justify-between">
+                    
+                    {/* Logo Section */}
+                    <Link href="/" className="flex items-center gap-3 group relative z-50">
+                        <div className="relative w-10 h-10 transition-transform duration-500 group-hover:scale-110 group-hover:rotate-3">
                             <Image
                                 src="/logo.png"
                                 alt="IGAC Logo"
@@ -56,97 +50,90 @@ export function Navbar() {
                                 className="object-contain"
                             />
                         </div>
-                        <span className="text-3xl md:text-2xl font-bold tracking-tighter text-foreground font-sans block">
-                            IGAC<span className="text-primary transition-all duration-300 group-hover/logo:ml-1">.</span>
+                        <span className="text-xl md:text-2xl font-primary font-bold tracking-widest text-white uppercase hidden sm:block">
+                            IGAC<span className="text-[#f2c45f] animate-pulse">.</span>
                         </span>
                     </Link>
 
-                    {/* Desktop Nav */}
-                    <nav className="hidden md:flex items-center gap-8">
-                        {navLinks.map((link) => {
-                            const isActive = pathname === link.href;
+                    {/* Desktop Navigation */}
+                    <nav className="hidden lg:flex items-center justify-center gap-1">
+                        {navLinks.filter(link => link.name !== "Join Us").map((link) => {
+                            const isActive = pathname === link.href || (link.href !== "/" && pathname.startsWith(link.href));
                             return (
                                 <Link
                                     key={link.name}
                                     href={link.href}
-                                    className={cn(
-                                        "text-sm font-medium transition-all duration-300 relative py-1",
-                                        isActive ? "text-primary" : "text-muted-foreground hover:text-foreground"
-                                    )}
+                                    className="relative px-4 py-2 group"
                                 >
-                                    {link.name}
-                                    {/* Link Underline Animation */}
-                                    <motion.span
-                                        initial={false}
-                                        animate={{ width: isActive ? "100%" : "0%" }}
-                                        whileHover={{ width: "100%" }}
-                                        className="absolute -bottom-0.5 left-0 h-[1.5px] bg-primary rounded-full transition-all duration-300"
-                                    />
+                                    <span className={cn(
+                                        "relative z-10 font-primary text-xs uppercase tracking-widest transition-colors duration-300",
+                                        isActive ? "text-[#f2c45f] font-bold" : "text-neutral-400 group-hover:text-white"
+                                    )}>
+                                        {link.name}
+                                    </span>
+                                    {isActive && (
+                                        <motion.div
+                                            layoutId="navbar-indicator"
+                                            className="absolute inset-0 bg-white/5 border border-white/10 rounded-full"
+                                            transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                                        />
+                                    )}
                                 </Link>
                             );
                         })}
-                        <Link
-                            href="/join"
-                            className="ml-2 px-6 py-2.5 text-sm font-bold tracking-wider uppercase text-primary-foreground bg-primary rounded-full transition-all duration-300 hover:bg-white hover:text-background hover:shadow-[0_0_20px_rgba(212,175,55,0.4)] active:scale-95"
-                        >
-                            Join Us
-                        </Link>
                     </nav>
 
-                    {/* Mobile Menu Button */}
-                    <button
-                        className="md:hidden relative z-50 p-2 text-foreground hover:bg-white/5 rounded-lg transition-colors"
-                        onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-                        aria-label={isMobileMenuOpen ? "Close menu" : "Open menu"}
-                    >
-                        {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
-                    </button>
-                </div>
-            </header>
+                    {/* CTA & Mobile Toggle */}
+                    <div className="flex items-center gap-4 relative z-50">
+                        <Link
+                            href="/join"
+                            className="hidden md:inline-flex items-center justify-center gap-2 px-6 py-2.5 bg-[#f2c45f] text-black rounded-full font-primary text-xs uppercase tracking-widest font-bold hover:bg-white transition-all duration-300 shadow-[0_0_20px_rgba(242,196,95,0.2)] hover:scale-105 hover:shadow-[0_0_30px_rgba(255,255,255,0.3)] group"
+                        >
+                            Join Us
+                            <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                        </Link>
 
-            {/* Mobile Nav Overlay */}
+                        <button
+                            className="lg:hidden w-10 h-10 flex items-center justify-center rounded-full bg-white/5 border border-white/10 text-white hover:bg-[#f2c45f] hover:text-black transition-colors"
+                            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                            aria-label={isMobileMenuOpen ? "Close menu" : "Open menu"}
+                        >
+                            {isMobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
+                        </button>
+                    </div>
+                </div>
+            </motion.header>
+
+            {/* Mobile Menu Overlay */}
             <AnimatePresence>
                 {isMobileMenuOpen && (
                     <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        className="fixed inset-0 z-40 bg-background/98 backdrop-blur-2xl md:hidden"
+                        initial={{ opacity: 0, backdropFilter: "blur(0px)" }}
+                        animate={{ opacity: 1, backdropFilter: "blur(24px)" }}
+                        exit={{ opacity: 0, backdropFilter: "blur(0px)" }}
+                        transition={{ duration: 0.4 }}
+                        className="fixed inset-0 z-40 bg-[#111111]/95 md:hidden"
                     >
-                        <div className="flex flex-col h-full pt-32 px-8 gap-8">
+                        <div className="flex flex-col h-full items-center justify-center gap-8 px-6 pb-20">
                             {navLinks.map((link, i) => (
                                 <motion.div
                                     key={link.name}
-                                    initial={{ opacity: 0, x: -30 }}
-                                    animate={{ opacity: 1, x: 0 }}
+                                    initial={{ opacity: 0, y: 20 }}
+                                    animate={{ opacity: 1, y: 0 }}
                                     transition={{ delay: 0.1 + i * 0.1, type: "spring", stiffness: 100 }}
                                 >
                                     <Link
                                         href={link.href}
                                         onClick={() => setIsMobileMenuOpen(false)}
                                         className={cn(
-                                            "text-4xl font-sans font-bold transition-colors",
-                                            pathname === link.href ? "text-primary" : "text-foreground hover:text-primary"
+                                            "font-primary text-3xl uppercase tracking-widest transition-colors block text-center",
+                                            pathname === link.href ? "text-[#f2c45f]" : "text-white hover:text-[#f2c45f]"
                                         )}
                                     >
                                         {link.name}
                                     </Link>
                                 </motion.div>
                             ))}
-                            <motion.div
-                                initial={{ opacity: 0, scale: 0.9 }}
-                                animate={{ opacity: 1, scale: 1 }}
-                                transition={{ delay: 0.4 }}
-                                className="mt-8"
-                            >
-                                <Link
-                                    href="/join"
-                                    onClick={() => setIsMobileMenuOpen(false)}
-                                    className="w-full text-center block px-8 py-4 text-xl font-bold uppercase tracking-widest text-primary-foreground bg-primary rounded-xl"
-                                >
-                                    Join Us
-                                </Link>
-                            </motion.div>
                         </div>
                     </motion.div>
                 )}

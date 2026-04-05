@@ -9,7 +9,7 @@ import {
   ArrowUp, ArrowDown, ImageIcon, Search, Download,
   Mail, Settings, Activity, Image as ImageIconLucide, LayoutDashboard,
   CheckSquare, Square, AlertTriangle, Moon, Sun, ExternalLink,
-  Archive, Reply, Clock, RefreshCw, Filter,
+  Archive, Reply, Clock, RefreshCw, Filter, Globe
 } from "lucide-react";
 
 // ─── Types ───────────────────────────────────────────
@@ -94,6 +94,38 @@ type SiteSettings = {
   join_form_url: string;
   register_url: string;
   announcement: string;
+  imun_eb_open?: boolean;
+  imun_del_open?: boolean;
+  imun_ca_open?: boolean;
+  imun_eb_url?: string;
+  imun_del_url?: string;
+  imun_ca_url?: string;
+  imun_registration_deadline?: string;
+  imun_info_date_value: string;
+  imun_info_date_sub: string;
+  imun_info_venue_value: string;
+  imun_info_venue_sub: string;
+  imun_info_schedule_value: string;
+  imun_info_schedule_sub: string;
+  imun_info_band_value: string;
+  imun_info_band_sub: string;
+  imun_committees_timer?: string;
+  imun_academic_venue_timer?: string;
+  imun_academic_venue_secret?: boolean;
+  imun_academic_venue_name?: string;
+  imun_academic_venue_desc?: string;
+  imun_academic_venue_image?: string;
+  imun_closing_venue_timer?: string;
+  imun_closing_venue_secret?: boolean;
+  imun_closing_venue_name?: string;
+  imun_closing_venue_desc?: string;
+  imun_closing_venue_image?: string;
+  imun_day3_gala_access?: string;
+  imun_day3_gala_desc?: string;
+  imun_decorum_title?: string;
+  imun_decorum_desc?: string;
+  imun_investment_title?: string;
+  imun_investment_desc?: string;
 };
 
 type GalleryImage = {
@@ -114,7 +146,7 @@ type DashboardStats = {
   gallery: { total: number };
 };
 
-type TabType = "overview" | "team" | "events" | "contacts" | "gallery" | "activity" | "settings";
+type TabType = "overview" | "team" | "events" | "contacts" | "gallery" | "activity" | "settings" | "imun";
 
 // ─── Constants ───────────────────────────────────────
 
@@ -204,6 +236,19 @@ export default function AdminDashboard() {
   const [token, setToken] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<TabType>("overview");
   const [darkMode, setDarkMode] = useState(true);
+
+  const toLocalIso = (iso?: string) => {
+    if (!iso) return "";
+    const d = new Date(iso);
+    if (isNaN(d.getTime())) return "";
+    return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+  };
+  const fromLocalIso = (val: string) => {
+    if (!val) return "";
+    const d = new Date(val);
+    if (isNaN(d.getTime())) return "";
+    return d.toISOString();
+  };
 
   // Data
   const [stats, setStats] = useState<DashboardStats | null>(null);
@@ -658,6 +703,7 @@ export default function AdminDashboard() {
     { id: "contacts", icon: Mail, label: "Contacts", badge: unreadCount || undefined, badgeColor: "bg-yellow-500 text-black" },
     { id: "gallery", icon: ImageIconLucide, label: "Gallery" },
     { id: "activity", icon: Activity, label: "Activity" },
+    { id: "imun", icon: Globe, label: "IMUN" },
     { id: "settings", icon: Settings, label: "Settings" },
   ];
 
@@ -1214,14 +1260,231 @@ export default function AdminDashboard() {
                           <div><h3 className="font-medium">Maintenance Mode</h3><p className={`text-sm ${txtSec}`}>Show maintenance page to visitors</p></div>
                           <ToggleSwitch checked={siteSettings.maintenance_mode || false} onChange={(v) => setSiteSettings({ ...siteSettings, maintenance_mode: v })} />
                         </div>
-                        <div className="flex items-center justify-between">
-                          <div><h3 className="font-medium">Registration Open</h3><p className={`text-sm ${txtSec}`}>Allow conference registrations</p></div>
-                          <ToggleSwitch checked={siteSettings.registration_open ?? true} onChange={(v) => setSiteSettings({ ...siteSettings, registration_open: v })} />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* ════════════ IMUN TAB ════════════ */}
+              {activeTab === "imun" && siteSettings && (
+                <div>
+                  <div className="flex items-center justify-between mb-6">
+                    <div>
+                      <h1 className="text-2xl md:text-3xl font-serif font-bold text-[#d4af37]">IMUN Session II Settings</h1>
+                      <p className={`${txtSec} text-sm mt-1`}>Manage all controls and content for IMUN.</p>
+                    </div>
+                    <button
+                      disabled={saving}
+                      onClick={saveSettings}
+                      className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-medium transition-all shadow-lg active:scale-95 disabled:opacity-50
+                        bg-gradient-to-r from-[#d4af37] to-[#f2c45f] text-[#051b11] hover:shadow-[#d4af37]/20`}
+                    >
+                      {saving ? <Loader2 className="w-5 h-5 animate-spin" /> : <Save className="w-5 h-5" />} Save Settings
+                    </button>
+                  </div>
+
+                  <div className="space-y-8">
+                    {/* IMUN Links & Actions */}
+                    <div className={`${bgCard} border ${border} border-[#d4af37]/30 rounded-2xl p-6`}>
+                      <h2 className="text-xl font-bold mb-4 font-serif">Registrations & Links</h2>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        {/* Executive Board */}
+                        <div className="space-y-4">
+                          <div className="flex items-center justify-between border-b border-white/5 pb-2">
+                            <h3 className="font-bold text-[#d4af37]">Executive Board</h3>
+                            <ToggleSwitch checked={siteSettings.imun_eb_open ?? false} onChange={(v) => setSiteSettings({ ...siteSettings, imun_eb_open: v })} />
+                          </div>
+                          <FormField label="EB Application URL" value={siteSettings.imun_eb_url || ""} onChange={(v) => setSiteSettings({ ...siteSettings, imun_eb_url: v })} placeholder="https://forms.gle/..." />
                         </div>
-                        <div className="flex items-center justify-between">
-                          <div><h3 className="font-medium">Recruitment Open</h3><p className={`text-sm ${txtSec}`}>Allow new member applications (Join Us page)</p></div>
-                          <ToggleSwitch checked={siteSettings.recruitment_open ?? true} onChange={(v) => setSiteSettings({ ...siteSettings, recruitment_open: v })} />
+
+                        {/* Delegate */}
+                        <div className="space-y-4">
+                          <div className="flex items-center justify-between border-b border-white/5 pb-2">
+                            <h3 className="font-bold text-[#d4af37]">Delegate Registration</h3>
+                            <ToggleSwitch checked={siteSettings.imun_del_open ?? true} onChange={(v) => setSiteSettings({ ...siteSettings, imun_del_open: v })} />
+                          </div>
+                          <FormField label="Delegate Form URL" value={siteSettings.imun_del_url || ""} onChange={(v) => setSiteSettings({ ...siteSettings, imun_del_url: v })} placeholder="https://forms.gle/..." />
                         </div>
+                        
+                        {/* Campus Ambassador */}
+                        <div className="space-y-4">
+                          <div className="flex items-center justify-between border-b border-white/5 pb-2">
+                            <h3 className="font-bold text-[#d4af37]">Campus Ambassador</h3>
+                            <ToggleSwitch checked={siteSettings.imun_ca_open ?? true} onChange={(v) => setSiteSettings({ ...siteSettings, imun_ca_open: v })} />
+                          </div>
+                          <FormField label="CA Application URL" value={siteSettings.imun_ca_url || ""} onChange={(v) => setSiteSettings({ ...siteSettings, imun_ca_url: v })} placeholder="https://forms.gle/..." />
+                        </div>
+
+                        {/* Registration Deadline */}
+                        <div className="space-y-4">
+                          <div className="flex items-center justify-between border-b border-white/5 pb-2">
+                            <h3 className="font-bold text-[#d4af37]">Global Deadline</h3>
+                          </div>
+                          <FormField 
+                            type="datetime-local"
+                            label="Countdown Target Date & Time" 
+                            value={toLocalIso(siteSettings.imun_registration_deadline)} 
+                            onChange={(v) => setSiteSettings({ ...siteSettings, imun_registration_deadline: fromLocalIso(v) })} 
+                          />
+                          <p className="text-[10px] text-neutral-400">Used by the registration hero countdown timer. Clear it to disable the timer.</p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Conference Overview */}
+                    <div className={`${bgCard} border ${border} border-[#d4af37]/30 rounded-2xl p-6`}>
+                      <h2 className="text-xl font-bold mb-4 font-serif">Conference Overview (Home Page Info)</h2>
+                      <div className="grid grid-cols-1 gap-6">
+                        
+                        <div className="grid grid-cols-2 gap-4 border border-white/10 p-4 rounded-xl bg-white/5">
+                          <div className="col-span-2 font-bold text-[#d4af37]">Date Settings</div>
+                          <FormField label="Date Main Text" value={siteSettings.imun_info_date_value || ""} onChange={(v) => setSiteSettings({ ...siteSettings, imun_info_date_value: v })} placeholder="Secret" />
+                          <FormField label="Date Subtext" value={siteSettings.imun_info_date_sub || ""} onChange={(v) => setSiteSettings({ ...siteSettings, imun_info_date_sub: v })} placeholder="Will be revealed soon" />
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-4 border border-white/10 p-4 rounded-xl bg-white/5">
+                          <div className="col-span-2 font-bold text-[#d4af37]">Venue Settings</div>
+                          <FormField label="Venue Main Text" value={siteSettings.imun_info_venue_value || ""} onChange={(v) => setSiteSettings({ ...siteSettings, imun_info_venue_value: v })} placeholder="To Be Announced" />
+                          <FormField label="Venue Subtext" value={siteSettings.imun_info_venue_sub || ""} onChange={(v) => setSiteSettings({ ...siteSettings, imun_info_venue_sub: v })} placeholder="A Premium Location" />
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-4 border border-white/10 p-4 rounded-xl bg-white/5">
+                          <div className="col-span-2 font-bold text-[#d4af37]">Schedule Settings</div>
+                          <FormField label="Schedule Main Text" value={siteSettings.imun_info_schedule_value || ""} onChange={(v) => setSiteSettings({ ...siteSettings, imun_info_schedule_value: v })} placeholder="In Preparation" />
+                          <FormField label="Schedule Subtext" value={siteSettings.imun_info_schedule_sub || ""} onChange={(v) => setSiteSettings({ ...siteSettings, imun_info_schedule_sub: v })} placeholder="Curating the agenda" />
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-4 border border-white/10 p-4 rounded-xl bg-white/5">
+                          <div className="col-span-2 font-bold text-[#d4af37]">Band Settings</div>
+                          <FormField label="Band Main Text" value={siteSettings.imun_info_band_value || ""} onChange={(v) => setSiteSettings({ ...siteSettings, imun_info_band_value: v })} placeholder="Classified" />
+                          <FormField label="Band Subtext" value={siteSettings.imun_info_band_sub || ""} onChange={(v) => setSiteSettings({ ...siteSettings, imun_info_band_sub: v })} placeholder="An exclusive performance" />
+                        </div>
+
+                      </div>
+                    </div>
+
+                    {/* Advanced IMUN Settings (Venues, Timers, Decorums) */}
+                    <div className={`${bgCard} border ${border} border-[#d4af37]/30 rounded-2xl p-6`}>
+                      <h2 className="text-xl font-bold mb-4 font-serif">Advanced Settings (Venues, Timers, Decorums)</h2>
+                      <div className="grid grid-cols-1 gap-6">
+
+                        <div className="border border-white/10 p-4 rounded-xl bg-white/5 space-y-4">
+                          <div className="font-bold text-[#d4af37]">Committees Embargo Timer</div>
+                          <FormField 
+                            type="datetime-local" 
+                            label="Embargo Target Date & Time" 
+                            value={toLocalIso(siteSettings.imun_committees_timer)} 
+                            onChange={(v) => setSiteSettings({ ...siteSettings, imun_committees_timer: fromLocalIso(v) })} 
+                          />
+                        </div>
+
+                        <div className="border border-white/10 p-4 rounded-xl bg-white/5 space-y-4">
+                          <div className="flex items-center justify-between">
+                            <div className="font-bold text-[#d4af37]">Academic Venue Settings</div>
+                            <ToggleSwitch checked={siteSettings.imun_academic_venue_secret ?? false} onChange={(v) => setSiteSettings({ ...siteSettings, imun_academic_venue_secret: v })} />
+                          </div>
+
+                          <FormField 
+                            type="datetime-local" 
+                            label="Academic Embargo Target Date & Time" 
+                            value={toLocalIso(siteSettings.imun_academic_venue_timer)} 
+                            onChange={(v) => setSiteSettings({ ...siteSettings, imun_academic_venue_timer: fromLocalIso(v) })} 
+                          />
+
+                          <FormField label="Venue Name" value={siteSettings.imun_academic_venue_name || ""} onChange={(v) => setSiteSettings({ ...siteSettings, imun_academic_venue_name: v })} placeholder="Campus A" />
+                          <div>
+                            <label className="block text-sm font-medium mb-1.5 uppercase tracking-widest text-[#f2c45f]">Venue Description</label>
+                            <textarea 
+                              className={`w-full ${bgInput} border ${border} rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-[#d4af37] focus:ring-1 focus:ring-[#d4af37]/50 transition-all font-medium h-24`} 
+                              value={siteSettings.imun_academic_venue_desc || ""} 
+                              onChange={(e) => setSiteSettings({ ...siteSettings, imun_academic_venue_desc: e.target.value })} 
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium mb-1.5 uppercase tracking-widest text-[#f2c45f]">Venue Image</label>
+                            <ImageUploader 
+                              currentImage={siteSettings.imun_academic_venue_image || ""} 
+                              onImageChange={(url) => setSiteSettings({ ...siteSettings, imun_academic_venue_image: url })} 
+                              uploadFn={(f) => uploadImage(f, "venues")} 
+                              uploading={uploadingImage} 
+                              aspect="banner" 
+                              bgInput={bgInput} 
+                              border={border} 
+                              txtSec={txtSec} 
+                            />
+                          </div>
+                        </div>
+
+                        <div className="border border-white/10 p-4 rounded-xl bg-white/5 space-y-4">
+                          <div className="flex items-center justify-between">
+                            <div className="font-bold text-[#d4af37]">Closing Ceremony Venue</div>
+                            <ToggleSwitch checked={siteSettings.imun_closing_venue_secret ?? true} onChange={(v) => setSiteSettings({ ...siteSettings, imun_closing_venue_secret: v })} />
+                          </div>
+                          
+                          <FormField 
+                            type="datetime-local" 
+                            label="Closing Embargo Target Date & Time" 
+                            value={toLocalIso(siteSettings.imun_closing_venue_timer)} 
+                            onChange={(v) => setSiteSettings({ ...siteSettings, imun_closing_venue_timer: fromLocalIso(v) })} 
+                          />
+
+                          <FormField label="Secret Venue Title" value={siteSettings.imun_closing_venue_name || ""} onChange={(v) => setSiteSettings({ ...siteSettings, imun_closing_venue_name: v })} placeholder="To Be Revealed..." />
+                          <div>
+                            <label className="block text-sm font-medium mb-1.5 uppercase tracking-widest text-[#f2c45f]">Secret Venue Description</label>
+                            <textarea 
+                              className={`w-full ${bgInput} border ${border} rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-[#d4af37] focus:ring-1 focus:ring-[#d4af37]/50 transition-all font-medium h-24`} 
+                              value={siteSettings.imun_closing_venue_desc || ""} 
+                              onChange={(e) => setSiteSettings({ ...siteSettings, imun_closing_venue_desc: e.target.value })} 
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium mb-1.5 uppercase tracking-widest text-[#f2c45f]">Secret Venue Image</label>
+                            <ImageUploader 
+                              currentImage={siteSettings.imun_closing_venue_image || ""} 
+                              onImageChange={(url) => setSiteSettings({ ...siteSettings, imun_closing_venue_image: url })} 
+                              uploadFn={(f) => uploadImage(f, "venues")} 
+                              uploading={uploadingImage} 
+                              aspect="banner" 
+                              bgInput={bgInput} 
+                              border={border} 
+                              txtSec={txtSec} 
+                            />
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 border border-white/10 p-4 rounded-xl bg-white/5">
+                          <div className="col-span-1 md:col-span-2 font-bold text-[#d4af37]">Day Three Gala Access</div>
+                          <FormField label="Gala Access Restriction text" value={siteSettings.imun_day3_gala_access || ""} onChange={(v) => setSiteSettings({ ...siteSettings, imun_day3_gala_access: v })} placeholder="Everyone but Classified" />
+                          <FormField label="Gala Description" value={siteSettings.imun_day3_gala_desc || ""} onChange={(v) => setSiteSettings({ ...siteSettings, imun_day3_gala_desc: v })} placeholder="[ CLASSIFIED ] ..." />
+                        </div>
+
+                        <div className="border border-white/10 p-4 rounded-xl bg-white/5 space-y-4">
+                          <div className="font-bold text-[#d4af37]">The Code of Conduct</div>
+                          <FormField label="Decorum Title" value={siteSettings.imun_decorum_title || ""} onChange={(v) => setSiteSettings({ ...siteSettings, imun_decorum_title: v })} />
+                          <div>
+                            <label className="block text-sm font-medium mb-1.5 uppercase tracking-widest text-[#f2c45f]">Decorum Description</label>
+                            <textarea 
+                              className={`w-full ${bgInput} border ${border} rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-[#d4af37] focus:ring-1 focus:ring-[#d4af37]/50 transition-all font-medium h-32`} 
+                              value={siteSettings.imun_decorum_desc || ""} 
+                              onChange={(e) => setSiteSettings({ ...siteSettings, imun_decorum_desc: e.target.value })} 
+                            />
+                          </div>
+                        </div>
+
+                        <div className="border border-white/10 p-4 rounded-xl bg-white/5 space-y-4">
+                          <div className="font-bold text-[#d4af37]">Investment & Return</div>
+                          <FormField label="Investment Title" value={siteSettings.imun_investment_title || ""} onChange={(v) => setSiteSettings({ ...siteSettings, imun_investment_title: v })} />
+                          <div>
+                            <label className="block text-sm font-medium mb-1.5 uppercase tracking-widest text-[#f2c45f]">Investment Description</label>
+                            <textarea 
+                              className={`w-full ${bgInput} border ${border} rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-[#d4af37] focus:ring-1 focus:ring-[#d4af37]/50 transition-all font-medium h-32`} 
+                              value={siteSettings.imun_investment_desc || ""} 
+                              onChange={(e) => setSiteSettings({ ...siteSettings, imun_investment_desc: e.target.value })} 
+                            />
+                          </div>
+                        </div>
+
                       </div>
                     </div>
                   </div>
@@ -1391,13 +1654,16 @@ function ImageUploader({ currentImage, onImageChange, uploadFn, uploading, aspec
     const url = await uploadFn(f); if (url) onImageChange(url);
     if (ref.current) ref.current.value = "";
   };
-  const containerClass = aspect === "banner" ? "w-full h-32 rounded-xl" : "w-24 h-24 rounded-xl";
+  const isBanner = aspect === "banner";
+  const wrapperClass = isBanner ? "flex flex-col gap-4" : "flex items-start gap-4";
+  const containerClass = isBanner ? "w-full h-32 md:h-48 rounded-xl" : "w-24 h-24 rounded-xl";
+
   return (
-    <div className="flex items-start gap-4">
+    <div className={wrapperClass}>
       <div className={`relative ${containerClass} overflow-hidden bg-[#0f3d2a] shrink-0`}>
         {currentImage ? <Image src={currentImage} alt="Preview" fill className="object-cover" /> : <div className="w-full h-full flex items-center justify-center"><ImageIcon className={txtSec} size={24} /></div>}
       </div>
-      <div className="flex flex-col gap-2 flex-1">
+      <div className="flex flex-col gap-2 flex-1 w-full">
         <button type="button" onClick={() => ref.current?.click()} disabled={uploading} className={`flex items-center gap-2 px-4 py-2.5 ${bgInput} border ${border} rounded-lg text-sm text-white hover:border-[#d4af37] disabled:opacity-50`}>
           {uploading ? <Loader2 size={14} className="animate-spin" /> : <Upload size={14} />} {uploading ? "Uploading..." : "Upload Image"}
         </button>

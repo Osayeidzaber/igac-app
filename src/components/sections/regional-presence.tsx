@@ -103,7 +103,7 @@ export function RegionalPresence({ ctgHead }: { ctgHead?: MemberProp }) {
                     {/* Right: Visionary Leader Card (Matched with Core Panel Style) */}
                     <div className="w-full lg:w-2/5 order-1 lg:order-2 flex justify-center">
                         <div className="relative w-full max-w-sm">
-                            <div className="absolute -inset-10 bg-emerald-500/10 blur-[120px] rounded-full group-hover/ctg:opacity-50 transition-opacity" />
+                            <div className="absolute -inset-10 bg-emerald-500/10 blur-[60px] md:blur-[120px] rounded-full group-hover/ctg:opacity-50 transition-opacity" />
 
                             <div className="relative border-4 border-emerald-500/30 rounded-[3rem] p-3 bg-emerald-950/20 backdrop-blur-md shadow-2xl">
                                 <ProfileCard

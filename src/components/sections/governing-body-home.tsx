@@ -18,7 +18,7 @@ export function GoverningBodyHome({ members }: { members: Member[] }) {
     return (
         <section className="py-24 relative overflow-hidden">
             {/* Subtle light green glow accent */}
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[60%] h-[60%] bg-emerald-500/15 blur-[180px] rounded-full pointer-events-none opacity-50" />
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[60%] h-[60%] bg-emerald-500/15 blur-[80px] md:blur-[180px] rounded-full pointer-events-none opacity-50" />
             <div className="container mx-auto px-6 mb-16 text-center flex flex-col items-center">
                 <Reveal className="flex flex-col items-center w-full">
                     <span className="text-primary text-sm font-bold tracking-[0.3em] uppercase mb-4 block text-center">Leadership</span>

@@ -36,7 +36,7 @@ export const teamData = {
             }
         },
         {
-            name: "Marzia E Jannat",
+            name: "Marzia Jannat Tayeba",
             role: "Chairman",
             image: "/governing-panel/chairman.jpg",
             quote: "Guiding the strategic vision of IGAC.",

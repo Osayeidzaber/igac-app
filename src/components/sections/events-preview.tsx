@@ -25,7 +25,7 @@ export async function EventsPreview() {
     return (
         <section className="py-24 relative overflow-hidden">
             {/* Subtle light green glow accent */}
-            <div className="absolute bottom-0 right-[-5%] w-[40%] h-[40%] bg-emerald-500/15 blur-[120px] rounded-full pointer-events-none" />
+            <div className="absolute bottom-0 right-[-5%] w-[40%] h-[40%] bg-emerald-500/15 blur-[60px] md:blur-[120px] rounded-full pointer-events-none" />
             <div className="container mx-auto px-6 text-center mb-20 flex flex-col items-center">
                 <Reveal className="flex flex-col items-center w-full">
                     <span className="text-primary text-sm font-bold tracking-[0.3em] uppercase mb-4 block">{label}</span>

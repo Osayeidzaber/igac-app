@@ -195,7 +195,7 @@ export default function EventsPage({ events, stats }: EventsPageProps) {
                                         </div>
                                         <div className="flex flex-col">
                                             <span className="text-sm font-black text-white">{event.stats?.committees || "5+"}</span>
-                                            <span className="text-[8px] uppercase text-primary font-black tracking-widest">Councils</span>
+                                            <span className="text-[8px] uppercase text-primary font-black tracking-widest">Committees</span>
                                         </div>
                                     </div>
                                 </div>

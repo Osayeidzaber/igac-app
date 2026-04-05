@@ -16,7 +16,7 @@ export function Topics() {
 
     return (
         <section className="py-24 relative">
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[60%] h-[60%] bg-primary/5 blur-[150px] rounded-full pointer-events-none" />
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[60%] h-[60%] bg-primary/5 blur-[80px] md:blur-[150px] rounded-full pointer-events-none" />
 
             <div className="container mx-auto px-6 max-w-6xl relative z-10 flex flex-col items-center">
                 <Reveal className="text-center mb-16 flex flex-col items-center">

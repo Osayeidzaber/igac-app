@@ -9,6 +9,38 @@ export type SiteSettingsPublic = {
   register_url: string;
   maintenance_mode: boolean;
   announcement: string;
+  imun_eb_open?: boolean;
+  imun_del_open?: boolean;
+  imun_ca_open?: boolean;
+  imun_eb_url?: string;
+  imun_del_url?: string;
+  imun_ca_url?: string;
+  imun_registration_deadline?: string;
+  imun_info_date_value?: string;
+  imun_info_date_sub?: string;
+  imun_info_venue_value?: string;
+  imun_info_venue_sub?: string;
+  imun_info_schedule_value?: string;
+  imun_info_schedule_sub?: string;
+  imun_info_band_value?: string;
+  imun_info_band_sub?: string;
+  imun_committees_timer?: string;
+  imun_academic_venue_secret?: boolean;
+  imun_academic_venue_name?: string;
+  imun_academic_venue_desc?: string;
+  imun_academic_venue_image?: string;
+  imun_academic_venue_timer?: string;
+  imun_closing_venue_secret?: boolean;
+  imun_closing_venue_name?: string;
+  imun_closing_venue_desc?: string;
+  imun_closing_venue_image?: string;
+  imun_closing_venue_timer?: string;
+  imun_day3_gala_access?: string;
+  imun_day3_gala_desc?: string;
+  imun_decorum_title?: string;
+  imun_decorum_desc?: string;
+  imun_investment_title?: string;
+  imun_investment_desc?: string;
 };
 
 export type SiteStats = {
@@ -25,6 +57,12 @@ export async function getSiteSettings(): Promise<SiteSettingsPublic> {
     register_url: "",
     maintenance_mode: false,
     announcement: "",
+    imun_eb_open: false,
+    imun_del_open: true,
+    imun_ca_open: true,
+    imun_eb_url: "",
+    imun_del_url: "https://docs.google.com/forms/d/e/1FAIpQLScXGZ1D1S17Q3eRz5T5J6h2K4F6nN6x8G1lK0k4J4Pz9_W_1w/viewform",
+    imun_ca_url: "https://docs.google.com/forms/d/e/1FAIpQLSd9W8A97XQXYx7rVw8J9Q61lQ_wOW2Q7P1D4PzE4B7vQ5Vxw/viewform",
   };
   if (isSupabaseReady()) {
     try {
