@@ -7,6 +7,7 @@ import dynamic from "next/dynamic";
 import { ArrowLeft, CheckCircle2, AlertCircle, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { Database } from "@/lib/database.types";
+import { fetchSystemSettingsAction } from "../crm/actions";
 import type { IDetectedBarcode } from "@yudiel/react-qr-scanner";
 
 // Dynamically import the Scanner so it never tries to render on the server (which lacks camera APIs)
@@ -20,12 +21,35 @@ const Scanner = dynamic(() => import("@yudiel/react-qr-scanner").then(mod => mod
   )
 });
 
+// Helper for Acoustic & Haptic Feedback
+const triggerHaptic = (success: boolean) => {
+  if (typeof window === "undefined" || typeof navigator === "undefined") return;
+  
+  try {
+    if (success) {
+      if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
+      const audio = new Audio("data:audio/mp3;base64,//OExAAAAANIAAAAAExBTUUzLjEwMKqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq/zEwgAQAABAwH4AAIAAAAAMHhAwwAAAAMQBgAAAAAAH270sP//AAAEgAAAAAAnZqqqAAA/zEwhBQAAChBf4AAYAAAANm2TcwAAAAi/gDAAAAAAB9p0x///wAAACAAAAAAMbQAAAAC/zEwhCgAAAgyf4QBAAAAANi0lMwAAAAhWADAAAAAABFk///wAAAAYQAAAAAM2gAAAP//OExAAAAANIAAAAAExBTUUzLjEwMKqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq");
+      if (audio) audio.play().catch(() => {});
+    } else {
+      if (navigator.vibrate) navigator.vibrate([200, 100, 200, 100, 500]);
+      const audio = new Audio("data:audio/mp3;base64,//OExAAAAANIAAAAAExBTUUzLjEwMKqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq/zEwgAQAABAwH4AAIAAAAAMHhAwwAAAAMQBgAAAAAAH270sP//AAAEgAAAAAAnZqqqAAA/zEwhBQAAChBf4AAYAAAANm2TcwAAAAi/gDAAAAAAB9p0x///wAAACAAAAAAMbQAAAAC/zEwhCgAAAgyf4QBAAAAANi0lMwAAAAhWADAAAAAABFk///wAAAAYQAAAAAM2gAAAP//OExAAAAANIAAAAAExBTUUzLjEwMKqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq"); // same tone, but just short error beep
+      if (audio) {
+        audio.playbackRate = 0.5;
+        audio.play().catch(() => {});
+      }
+    }
+  } catch (e) {
+    // ignore user-interaction audio play errors
+  }
+};
+
 type Delegate = Database["public"]["Tables"]["delegates"]["Row"];
 
 export default function PortalScan() {
   const router = useRouter();
   const [day, setDay] = useState<1 | 2 | 3>(1);
   const [checkpoint, setCheckpoint] = useState<"registration" | "committee">("registration");
+  const [globalCheckpoint, setGlobalCheckpoint] = useState<"registration" | "committee" | "both">("both");
   
   const [scanState, setScanState] = useState<"idle" | "verifying" | "action_required" | "edit_auth" | "editing" | "success" | "error">("idle");
   const [message, setMessage] = useState("");
@@ -55,6 +79,26 @@ export default function PortalScan() {
       setSecretariatId(session.user.id);
       setIsReady(true);
     });
+
+    const loadSettings = async () => {
+      try {
+        const res = await fetchSystemSettingsAction();
+        if (res) {
+          setDay(res.active_day as 1 | 2 | 3);
+          const cp = res.active_checkpoint as "registration" | "committee" | "both";
+          setGlobalCheckpoint(cp);
+          if (cp !== "both") {
+            setCheckpoint(cp);
+          }
+        }
+      } catch (e) {
+        console.error(e);
+      }
+    };
+    loadSettings();
+    const iv = setInterval(loadSettings, 10000);
+
+    return () => clearInterval(iv);
   }, [router]);
 
   const handleScan = async (detectedCodes: IDetectedBarcode[]) => {
@@ -99,37 +143,52 @@ export default function PortalScan() {
     setMessage("Delegate Found - Action Required");
   };
 
+  const [confirmDialog, setConfirmDialog] = useState<{ isOpen: boolean; data: { name: string; committee: string; country: string; day: number } | null; onConfirm: () => void } | null>(null);
+
   const confirmCheckIn = async () => {
     if (!lastScanned || !secretariatId) return;
 
-    if (!window.confirm(`Are you sure you want to scan ${lastScanned.full_name} with ${lastScanned.committee || 'Unallocated'} and ${lastScanned.country || 'No Country'} --- for Day ${day} (${checkpoint}) ---?`)) return;
+    setConfirmDialog({
+      isOpen: true,
+      data: {
+        name: lastScanned.full_name,
+        committee: lastScanned.committee || 'Unallocated',
+        country: lastScanned.country || 'No Country',
+        day: day
+      },
+      onConfirm: async () => {
+        setConfirmDialog(null);
+        setScanState("verifying");
+        setMessage("Processing Check-in...");
+        const supabase = getSupabase();
 
-    setScanState("verifying");
-    setMessage("Processing Check-in...");
-    const supabase = getSupabase();
+        // Log the check-in
+        const { error: chkError } = await supabase.from("delegate_checkins").insert({
+          delegate_id: lastScanned.id,
+          day: day,
+          checkpoint: checkpoint,
+          scanned_by_id: secretariatId,
+        });
 
-    // Log the check-in
-    const { error: chkError } = await supabase.from("delegate_checkins").insert({
-      delegate_id: lastScanned.id,
-      day: day,
-      checkpoint: checkpoint,
-      scanned_by_id: secretariatId,
-    });
+        if (chkError) {
+          if (chkError.code === "23505") { // Postgres "unique violation" automatically handles double scans
+            setScanState("error");
+            setMessage(`${lastScanned.full_name} has ALREADY been scanned for Day ${day} (${checkpoint}).`);
+            triggerHaptic(false);
+          } else {
+            setScanState("error");
+            setMessage(`Database Error: ${chkError.message}`);
+            triggerHaptic(false);
+          }
+        } else {
+          setScanState("success");
+          setMessage(`Successfully checked in ${lastScanned.full_name}!`);
+          triggerHaptic(true);
+        }
 
-    if (chkError) {
-      if (chkError.code === "23505") { // Postgres "unique violation" automatically handles double scans
-        setScanState("error");
-        setMessage(`${lastScanned.full_name} has ALREADY been scanned for Day ${day} (${checkpoint}).`);
-      } else {
-        setScanState("error");
-        setMessage(`Database Error: ${chkError.message}`);
+        resetStateAfterWait();
       }
-    } else {
-      setScanState("success");
-      setMessage(`Successfully checked in ${lastScanned.full_name}!`);
-    }
-
-    resetStateAfterWait();
+    });
   };
 
   const handleRevealTransaction = (e: React.FormEvent) => {
@@ -144,11 +203,15 @@ export default function PortalScan() {
 
   const verifyEditPassword = () => {
     if (passwordInput !== "subaru5889@") {
-      alert("Incorrect master password.");
+      setScanState("error");
+      setMessage("Incorrect master password.");
+      resetStateAfterWait();
       return;
     }
     if (!editorNameInput.trim()) {
-      alert("Please enter your name so we can record who authorized this edit.");
+      setScanState("error");
+      setMessage("Please enter your name so we can record who authorized this edit.");
+      resetStateAfterWait();
       return;
     }
 
@@ -249,15 +312,19 @@ export default function PortalScan() {
         </div>
 
         {/* Configuration Controls */}
-        <div className="rounded-2xl border border-white/10 bg-white/5 p-5 backdrop-blur-md space-y-4">
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-zinc-400">Conference Day</label>
-            <div className="grid grid-cols-3 gap-2">
+        <div className="rounded-2xl border border-emerald-500/30 bg-emerald-950/20 p-5 backdrop-blur-md space-y-4 relative overflow-hidden">
+          <div className="absolute top-0 right-0 px-3 py-1 bg-emerald-500/20 text-emerald-400 text-[10px] font-bold uppercase tracking-widest rounded-bl-lg flex items-center gap-1.5">
+            <span className="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-pulse"></span>
+            Global Sync Active
+          </div>
+
+          <div className="space-y-2 mt-2">
+            <label className="text-sm font-medium text-emerald-400/80">Conference Day</label>
+            <div className="grid grid-cols-3 gap-2 opacity-80 pointer-events-none">
               {[1, 2, 3].map((d) => (
                 <button
                   key={d}
-                  onClick={() => setDay(d as 1 | 2 | 3)}
-                  className={`rounded-xl py-2 text-sm font-medium transition-all ${day === d ? "bg-orange-500 text-white shadow-lg shadow-orange-500/20" : "bg-black/50 text-zinc-400 border border-white/10 hover:bg-white/5"}`}
+                  className={`rounded-xl py-2 text-sm font-bold transition-all ${day === d ? "bg-emerald-500 text-emerald-950 shadow-lg shadow-emerald-500/20" : "bg-black/50 text-emerald-500/50 border border-emerald-500/20"}`}
                 >
                   Day {d}
                 </button>
@@ -266,13 +333,13 @@ export default function PortalScan() {
           </div>
 
           <div className="space-y-2">
-            <label className="text-sm font-medium text-zinc-400">Checkpoint Location</label>
-            <div className="grid grid-cols-2 gap-2">
+            <label className="text-sm font-medium text-emerald-400/80">Checkpoint Location</label>
+            <div className={`grid ${globalCheckpoint === 'both' ? 'grid-cols-2' : 'grid-cols-2 opacity-80 pointer-events-none'} gap-2`}>
               {["registration", "committee"].map((cp) => (
                 <button
                   key={cp}
-                  onClick={() => setCheckpoint(cp as "registration" | "committee")}
-                  className={`rounded-xl py-2 text-sm font-medium capitalize transition-all ${checkpoint === cp ? "bg-blue-500 text-white shadow-lg shadow-blue-500/20" : "bg-black/50 text-zinc-400 border border-white/10 hover:bg-white/5"}`}
+                  onClick={() => globalCheckpoint === 'both' ? setCheckpoint(cp as "registration" | "committee") : null}
+                  className={`rounded-xl py-2 text-sm font-bold capitalize transition-all ${checkpoint === cp ? "bg-blue-500 text-white shadow-lg shadow-blue-500/20" : "bg-black/50 text-blue-400/50 border border-blue-500/20"}`}
                 >
                   {cp}
                 </button>
@@ -314,53 +381,67 @@ export default function PortalScan() {
           
           {/* Overlay Status Feeds */}
           {scanState === "action_required" && lastScanned && (
-             <div className="absolute inset-0 z-10 flex flex-col justify-center bg-blue-900/95 backdrop-blur-md p-6 animate-in fade-in zoom-in duration-200 overflow-y-auto">
+             <div className="absolute inset-0 z-10 flex flex-col justify-center bg-blue-950/95 backdrop-blur-md p-6 animate-in fade-in zoom-in duration-200 overflow-y-auto border border-blue-500/20">
                <div className="flex flex-col items-center">
-                 <CheckCircle2 className="h-12 w-12 text-blue-400 mb-2 drop-shadow-lg" />
-                 <h2 className="text-xl font-bold text-white mb-2">Review Required</h2>
+                 <CheckCircle2 className="h-12 w-12 text-blue-400 mb-2 drop-shadow-[0_0_15px_rgba(96,165,250,0.5)]" />
+                 <h2 className="text-2xl font-bold text-white mb-2 tracking-tight">Review Required</h2>
                </div>
                
-               <div className="mt-2 w-full rounded-xl bg-black/40 p-4 text-left border border-white/10 shadow-inner">
-                 <p className="text-xs text-blue-200 uppercase tracking-wide font-semibold truncate">{lastScanned.country} • {lastScanned.committee}</p>
-                 <p className="text-xl text-white font-bold leading-tight mt-1">{lastScanned.full_name}</p>
+               <div className="mt-4 w-full rounded-2xl bg-black/60 p-5 text-left border border-white/10 shadow-2xl relative overflow-hidden">
+                 <div className="absolute top-0 right-0 p-3 opacity-10 pointer-events-none">
+                    <CheckCircle2 className="w-32 h-32 text-blue-500" />
+                 </div>
+                 <p className="text-xs text-blue-300 font-bold uppercase tracking-wider mb-1 flex items-center gap-2">
+                   <span>{lastScanned.country || "Unallocated"}</span>
+                   <span className="w-1 h-1 bg-blue-500 rounded-full"></span>
+                   <span>{lastScanned.committee || "Unallocated"}</span>
+                 </p>
+                 <p className="text-2xl text-white font-extrabold leading-tight">{lastScanned.full_name}</p>
+                 
+                 <div className="mt-4 border-t border-white/10 pt-3">
+                   <p className="text-xs text-zinc-400 uppercase tracking-widest font-semibold mb-1">Check-in Status</p>
+                   <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-blue-500/10 text-blue-400 font-bold rounded border border-blue-500/20 text-sm tracking-wide">
+                     Day {day} <ArrowLeft className="w-3 h-3 rotate-180 opacity-50" /> <span className="capitalize">{checkpoint}</span>
+                   </div>
+                 </div>
                </div>
 
                {/* Transaction Protection inside Active Scan */}
-               <div className="w-full mt-4 bg-zinc-900/80 border border-blue-500/20 p-4 rounded-xl">
-                 <h3 className="text-xs font-bold text-blue-400 mb-2 uppercase tracking-wider flex items-center justify-center gap-1">
-                    Financial Data
+               <div className="w-full mt-4 bg-zinc-900/80 border border-emerald-500/10 p-4 rounded-xl relative overflow-hidden">
+                 <h3 className="text-xs font-bold text-emerald-400 mb-3 uppercase tracking-wider flex items-center gap-2">
+                    Financial Data Override
                  </h3>
                  {!showTransaction ? (
-                    <form onSubmit={handleRevealTransaction} className="flex gap-2 relative">
+                    <form onSubmit={handleRevealTransaction} className="flex gap-2 relative z-10">
                       <input 
                         type="password" 
                         placeholder="Admin Key..." 
-                        className="w-full bg-black/50 border border-blue-900/50 rounded px-3 py-2 text-white text-sm outline-none focus:border-blue-500 transition font-mono"
+                        className="w-full bg-black/50 border border-emerald-900/50 rounded px-3 py-2 text-white text-sm outline-none focus:border-emerald-500 transition font-mono"
                         value={transPassword}
                         onChange={e => setTransPassword(e.target.value)}
                       />
-                      <button type="submit" className="bg-blue-600/20 hover:bg-blue-600/40 border border-blue-500/30 text-blue-400 text-sm font-bold px-3 py-2 rounded transition whitespace-nowrap uppercase">
+                      <button type="submit" className="bg-emerald-600/20 hover:bg-emerald-600/40 border border-emerald-500/30 text-emerald-400 text-sm font-bold px-4 py-2 rounded transition whitespace-nowrap uppercase tracking-wider">
                         Reveal
                       </button>
-                      {transError && <span className="text-[10px] text-red-400 absolute -bottom-4 left-0 uppercase font-bold">{transError}</span>}
+                      {transError && <span className="text-[10px] text-red-500 absolute -bottom-5 left-0 uppercase font-bold">{transError}</span>}
                     </form>
                  ) : (
-                    <div className="bg-black/50 border border-blue-500/50 p-2 rounded font-mono text-emerald-400 text-sm text-center break-all">
+                    <div className="bg-black/50 border border-emerald-500/30 p-3 rounded font-mono text-emerald-400 text-sm break-all flex items-center shadow-[0_0_15px_rgba(16,185,129,0.1)] z-10 relative">
                       {lastScanned.transaction_id || 'NO_TRANSACTION_ID_FOUND'}
                     </div>
                  )}
                </div>
 
-               <div className="w-full mt-4 space-y-3">
-                 <button onClick={confirmCheckIn} className="w-full rounded-xl bg-blue-600 py-3 font-semibold text-white hover:bg-blue-500 shadow-xl shadow-blue-500/20">
-                   Confirm Entry Check-in
+               <div className="w-full mt-6 space-y-3">
+                 <button onClick={confirmCheckIn} className="w-full rounded-xl bg-gradient-to-r from-blue-600 to-sky-500 py-4 font-bold text-white shadow-[0_0_20px_rgba(59,130,246,0.3)] transition-transform hover:scale-[1.02] active:scale-95 text-lg">
+                   Authorize Entry 
                  </button>
-                 <div className="grid grid-cols-2 gap-3">
-                   <button onClick={() => setScanState("edit_auth")} className="rounded-xl bg-black/50 py-3 font-semibold text-zinc-300 border border-white/10 hover:bg-white/10">
-                     Change Info
+                 <div className="grid grid-cols-2 gap-3 pb-8">
+                   <button onClick={() => setScanState("edit_auth")} className="rounded-xl bg-black/50 py-3 font-semibold text-zinc-300 border border-white/10 hover:bg-white/10 transition-colors">
+                     Edit Profile
                    </button>
-                   <button onClick={() => {setScanState("idle"); setShowTransaction(false); setTransPassword(""); setTransError(""); setMessage("");}} className="rounded-xl bg-red-950/50 py-3 font-semibold text-red-400 border border-red-500/20 hover:bg-red-900/50">
-                     Cancel Scan
+                   <button onClick={() => {setScanState("idle"); setShowTransaction(false); setTransPassword(""); setTransError(""); setMessage("");}} className="rounded-xl bg-rose-500/10 py-3 font-semibold text-rose-500 border border-rose-500/20 hover:bg-rose-500/20 transition-colors">
+                     Abort
                    </button>
                  </div>
                </div>
@@ -427,7 +508,7 @@ export default function PortalScan() {
                     />
                   </div>
 
-                  <div className="grid grid-cols-2 gap-3 pt-4">
+                  <div className="grid grid-cols-2 gap-3 pt-4 pb-12">
                     <button onClick={() => setScanState("action_required")} className="rounded-xl bg-white/5 py-3 font-semibold text-white border border-white/10">Discard</button>
                     <button onClick={submitEdit} className="rounded-xl bg-green-500 py-3 font-semibold text-white">Save Changes</button>
                   </div>
@@ -482,6 +563,39 @@ export default function PortalScan() {
         </p>
 
       </div>
+
+      {/* Custom React Confirmation overlay */}
+      {confirmDialog && confirmDialog.isOpen && confirmDialog.data && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+          <div className="w-full max-w-sm bg-zinc-900 border border-white/10 rounded-2xl p-6 shadow-2xl flex flex-col items-center animate-in zoom-in-95 duration-200">
+            <div className="w-16 h-16 rounded-full bg-blue-500/20 flex items-center justify-center mb-4 border border-blue-500/30 shadow-[0_0_15px_rgba(59,130,246,0.3)]">
+              <CheckCircle2 className="w-8 h-8 text-blue-400" />
+            </div>
+            
+            <h3 className="text-xl font-bold text-white mb-2 text-center">Confirm Check-in</h3>
+            <p className="text-sm text-zinc-400 mb-6 text-center leading-relaxed">
+              Scan <span className="text-white font-bold">{confirmDialog.data.name}</span> in <span className="text-blue-400 font-semibold">{confirmDialog.data.committee}</span> <span className="text-zinc-500">({confirmDialog.data.country})</span> for <span className="text-white font-bold font-mono">Day {confirmDialog.data.day}</span>?
+            </p>
+
+            <div className="w-full flex gap-3">
+              <button 
+                onClick={() => setConfirmDialog(null)}
+                className="flex-1 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 font-semibold py-3 rounded-xl transition-colors border border-white/5 active:scale-95"
+              >
+                No, Go Back
+              </button>
+              <button 
+                onClick={() => {
+                   confirmDialog.onConfirm();
+                }}
+                className="flex-1 bg-gradient-to-r from-blue-600 to-sky-500 hover:from-blue-500 hover:to-sky-400 text-white font-bold py-3 rounded-xl transition-transform active:scale-95 shadow-lg shadow-blue-500/20"
+              >
+                Yes, Check In
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

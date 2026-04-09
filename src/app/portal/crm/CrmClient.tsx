@@ -1,11 +1,11 @@
 'use client';
 
 import { useState } from 'react';
-import { Users, UploadCloud, LayoutList, Activity, LogOut } from 'lucide-react';
+import { Users, UploadCloud, LayoutList, Activity, LogOut, ShieldAlert, Radio } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 
-type Tab = 'registry' | 'ingestion' | 'committees' | 'logs';
+type Tab = 'registry' | 'ingestion' | 'committees' | 'logs' | 'secretariat' | 'command';
 
 export default function CrmClient() {
   const [activeTab, setActiveTab] = useState<Tab>('registry');
@@ -87,6 +87,18 @@ export default function CrmClient() {
             icon={<Activity className="w-4 h-4" />} 
             label="Scan Logs" 
           />
+          <TabButton 
+            active={activeTab === 'secretariat'} 
+            onClick={() => setActiveTab('secretariat')} 
+            icon={<ShieldAlert className="w-4 h-4" />} 
+            label="Secretariat" 
+          />
+          <TabButton 
+            active={activeTab === 'command'} 
+            onClick={() => setActiveTab('command')} 
+            icon={<Radio className="w-4 h-4 text-emerald-400" />} 
+            label="Command Center" 
+          />
         </div>
       </nav>
 
@@ -96,6 +108,8 @@ export default function CrmClient() {
         {activeTab === 'ingestion' && <IngestionTab />}
         {activeTab === 'committees' && <CommitteesTab />}
         {activeTab === 'logs' && <ScanLogsTab />}
+        {activeTab === 'secretariat' && <SecretariatTab />}
+        {activeTab === 'command' && <CommandCenterTab />}
       </main>
     </div>
   );
@@ -105,6 +119,8 @@ import { RegistryTab } from './RegistryTab';
 import { IngestionTab } from './IngestionTab';
 import { CommitteesTab } from './CommitteesTab';
 import { ScanLogsTab } from './ScanLogsTab';
+import { SecretariatTab } from './SecretariatTab';
+import { CommandCenterTab } from './CommandCenterTab';
 
 // --- Helpers ---
 
