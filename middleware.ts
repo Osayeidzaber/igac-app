@@ -3,6 +3,27 @@ import { NextRequest, NextResponse } from "next/server";
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   
+  // Protect /portal/crm
+  if (pathname.startsWith('/portal/crm')) {
+    if (pathname === '/portal/crm/login') return NextResponse.next();
+    
+    const token = request.cookies.get('crm_session');
+    if (!token || token.value !== 'authenticated') {
+      return NextResponse.redirect(new URL('/portal/crm/login', request.url));
+    }
+  }
+
+  // Protect /api/admin/mail
+  if (pathname.startsWith('/api/admin/mail')) {
+    const token = request.cookies.get('crm_session');
+    if (!token || token.value !== 'authenticated') {
+      return new NextResponse(JSON.stringify({ error: 'Unauthorized via Middleware' }), {
+        status: 401,
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
+  }
+
   // Skip maintenance check for admin routes, API routes, static files, and maintenance page itself
   if (
     pathname.startsWith("/admin") ||
@@ -15,16 +36,21 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
+  // Temporarily bypassed for Vercel edge deployment issues
+  return NextResponse.next();
+
+  /*
   try {
     // Check maintenance mode from database
     const baseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
     const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
     
-    if (!baseUrl || !serviceKey) {
+    if (!baseUrl || !serviceKey || !baseUrl.startsWith('http')) {
       return NextResponse.next();
     }
 
-    const response = await fetch(`${baseUrl}/rest/v1/site_settings?id=eq.main`, {
+    const cleanBaseUrl = baseUrl.replace(/\/$/, '');
+    const response = await fetch(`${cleanBaseUrl}/rest/v1/site_settings?id=eq.main`, {
       headers: {
         "apikey": serviceKey,
         "Authorization": `Bearer ${serviceKey}`,
@@ -47,6 +73,7 @@ export async function middleware(request: NextRequest) {
     console.error("Maintenance check failed:", error);
     // If check fails, continue normally (fail open)
   }
+  */
 
   return NextResponse.next();
 }
