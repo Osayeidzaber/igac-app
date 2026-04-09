@@ -1,9 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import nodemailer from "nodemailer";
-import { renderToStaticMarkup } from "react-dom/server";
-import { QRCodeSVG } from "qrcode.react";
-import React from "react";
+import QRCode from "qrcode";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
@@ -53,20 +51,17 @@ export async function POST(req: Request) {
     });
 
     // 3. Generate QR Code Server-Side
-    const qrSvgString = renderToStaticMarkup(
-      React.createElement(QRCodeSVG, {
-        value: delegate.qr_token,
-        size: 250,
-        level: "H",
-        includeMargin: true,
-        fgColor: "#000000",
-        bgColor: "#ffffff"
-      })
-    );
+    const qrDataUri = await QRCode.toDataURL(delegate.qr_token, {
+      margin: 1,
+      width: 250,
+      color: {
+        dark: "#000000",
+        light: "#ffffff"
+      }
+    });
 
-    // Convert SVG to Base64 to attach as an inline image
-    const svgBase64 = Buffer.from(qrSvgString).toString("base64");
-    const qrDataUri = `data:image/svg+xml;base64,${svgBase64}`;
+    // Convert Data URI to Base64 to attach as an inline image
+    const base64Data = qrDataUri.split(',')[1];
 
     // 4. Build HTML Template
     const htmlTemplate = `
@@ -118,10 +113,10 @@ export async function POST(req: Request) {
       html: htmlTemplate,
       attachments: [
         {
-          filename: "qr-code.svg",
-          content: svgBase64,
+          filename: "qr-code.png",
+          content: base64Data,
           encoding: "base64",
-          contentType: "image/svg+xml",
+          contentType: "image/png",
           cid: "qrcode", // Used in html template
         },
       ],
