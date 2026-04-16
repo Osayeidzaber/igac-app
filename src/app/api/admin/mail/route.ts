@@ -78,7 +78,7 @@ export async function POST(req: Request) {
             <p style="font-size: 11px; color: #94a3b8; font-weight: 700; text-transform: uppercase; margin-bottom: 20px; letter-spacing: 1px;">Digital Entrance Pass</p>
             
             <div style="background-color: #ffffff; display: inline-block; padding: 15px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.08); margin-bottom: 20px;">
-              <img src="cid:qrcode" alt="QR Code" style="width: 220px; height: 220px; display: block;" />
+              <img src="data:image/png;base64,${base64Data}" alt="QR Code" style="width: 220px; height: 220px; display: block;" />
             </div>
             
             <div style="margin-bottom: 20px;">
@@ -121,7 +121,6 @@ export async function POST(req: Request) {
         {
           filename: "delegate-qr.png",
           content: base64Data,
-          cid: "qrcode", // Used in html template
         },
       ],
     });

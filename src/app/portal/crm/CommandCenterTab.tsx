@@ -144,47 +144,47 @@ export function CommandCenterTab() {
 
         {/* Right Column: Live Data Feed */}
         <div className="lg:col-span-2 space-y-6">
-          
-            <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6 shadow-lg shadow-black/50">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6 relative overflow-hidden flex flex-col items-center justify-center">
-              <div className="absolute top-0 left-0 w-32 h-full bg-gradient-to-r from-blue-500/10 to-transparent pointer-events-none" />
-              <Users className="w-8 h-8 text-blue-500 opacity-20 absolute right-4 top-4" />
-              <span className="text-xs font-bold text-zinc-400 uppercase tracking-widest mb-1 z-10">Total Database</span>
-              <span className="font-mono text-3xl font-black text-white tracking-tight z-10">{stats ? stats.totalDelegates : '--'}</span>
-            </div>
-            
-            <div className="bg-zinc-900 border border-emerald-900/40 rounded-xl p-6 relative overflow-hidden flex flex-col items-center justify-center shadow-[0_0_30px_rgba(16,185,129,0.05)]">
-              <div className="absolute top-0 right-0 w-16 h-full bg-gradient-to-l from-emerald-500/10 to-transparent pointer-events-none" />
-              <span className="text-[10px] font-bold text-emerald-400 uppercase tracking-widest mb-1 z-10 flex items-center gap-1.5 whitespace-nowrap">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                Registrations
-              </span>
-              <span className="font-mono text-3xl font-black text-emerald-50 tracking-tight z-10">
-                {stats ? stats.registeredCount : '--'}
-              </span>
-            </div>
+          <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6 shadow-lg shadow-black/50">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6 relative overflow-hidden flex flex-col items-center justify-center">
+                <div className="absolute top-0 left-0 w-32 h-full bg-gradient-to-r from-blue-500/10 to-transparent pointer-events-none" />
+                <Users className="w-8 h-8 text-blue-500 opacity-20 absolute right-4 top-4" />
+                <span className="text-xs font-bold text-zinc-400 uppercase tracking-widest mb-1 z-10">Total Database</span>
+                <span className="font-mono text-3xl font-black text-white tracking-tight z-10">{stats ? stats.totalDelegates : '--'}</span>
+              </div>
+              
+              <div className="bg-zinc-900 border border-emerald-900/40 rounded-xl p-6 relative overflow-hidden flex flex-col items-center justify-center shadow-[0_0_30px_rgba(16,185,129,0.05)]">
+                <div className="absolute top-0 right-0 w-16 h-full bg-gradient-to-l from-emerald-500/10 to-transparent pointer-events-none" />
+                <span className="text-[10px] font-bold text-emerald-400 uppercase tracking-widest mb-1 z-10 flex items-center gap-1.5 whitespace-nowrap">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                  Registrations
+                </span>
+                <span className="font-mono text-3xl font-black text-emerald-50 tracking-tight z-10">
+                  {stats ? stats.registeredCount : '--'}
+                </span>
+              </div>
 
-            <div className="bg-zinc-900 border border-purple-900/40 rounded-xl p-6 relative overflow-hidden flex flex-col items-center justify-center shadow-[0_0_30px_rgba(168,85,247,0.05)]">
-              <div className="absolute top-0 right-0 w-16 h-full bg-gradient-to-l from-purple-500/10 to-transparent pointer-events-none" />
-              <span className="text-[10px] font-bold text-purple-400 uppercase tracking-widest mb-1 z-10 flex items-center gap-1.5 whitespace-nowrap">
-                <span className="w-1.5 h-1.5 rounded-full bg-purple-500 animate-pulse" />
-                In Committees
-              </span>
-              <span className="font-mono text-3xl font-black text-purple-50 tracking-tight z-10">
-                {stats ? stats.committeeCount : '--'}
-              </span>
-            </div>
+              <div className="bg-zinc-900 border border-purple-900/40 rounded-xl p-6 relative overflow-hidden flex flex-col items-center justify-center shadow-[0_0_30px_rgba(168,85,247,0.05)]">
+                <div className="absolute top-0 right-0 w-16 h-full bg-gradient-to-l from-purple-500/10 to-transparent pointer-events-none" />
+                <span className="text-[10px] font-bold text-purple-400 uppercase tracking-widest mb-1 z-10 flex items-center gap-1.5 whitespace-nowrap">
+                  <span className="w-1.5 h-1.5 rounded-full bg-purple-500 animate-pulse" />
+                  In Committees
+                </span>
+                <span className="font-mono text-3xl font-black text-purple-50 tracking-tight z-10">
+                  {stats ? stats.committeeCount : '--'}
+                </span>
+              </div>
 
-            <div className="bg-zinc-900 border border-rose-900/40 rounded-xl p-6 relative overflow-hidden flex flex-col items-center justify-center shadow-[0_0_30px_rgba(244,63,94,0.05)]">
-              <div className="absolute top-0 right-0 w-16 h-full bg-gradient-to-l from-rose-500/10 to-transparent pointer-events-none" />
-              <span className="text-[10px] font-bold text-rose-400 uppercase tracking-widest mb-1 z-10 flex items-center gap-1.5 whitespace-nowrap">
-                <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse" />
-                Exited Venue
-              </span>
-              <span className="font-mono text-3xl font-black text-rose-50 tracking-tight z-10">
-                {stats ? stats.exitCount : '--'}
-              </span>
+              <div className="bg-zinc-900 border border-rose-900/40 rounded-xl p-6 relative overflow-hidden flex flex-col items-center justify-center shadow-[0_0_30px_rgba(244,63,94,0.05)]">
+                <div className="absolute top-0 right-0 w-16 h-full bg-gradient-to-l from-rose-500/10 to-transparent pointer-events-none" />
+                <span className="text-[10px] font-bold text-rose-400 uppercase tracking-widest mb-1 z-10 flex items-center gap-1.5 whitespace-nowrap">
+                  <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse" />
+                  Exited Venue
+                </span>
+                <span className="font-mono text-3xl font-black text-rose-50 tracking-tight z-10">
+                  {stats ? stats.exitCount : '--'}
+                </span>
+              </div>
             </div>
           </div>
 
