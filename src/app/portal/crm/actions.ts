@@ -2,11 +2,23 @@
 
 import { getServiceSupabase } from '@/lib/supabase';
 import { cookies } from 'next/headers';
+import { verifySessionToken } from '@/lib/session';
 
 async function checkAuth() {
   const cookieStore = await cookies();
   const token = cookieStore.get('crm_session');
-  if (!token || token.value !== 'authenticated') {
+  
+  if (!token) {
+    throw new Error('Unauthorized access');
+  }
+
+  // Support both the legacy 'authenticated' string and the newer JWT tokens
+  if (token.value === 'authenticated') {
+    return;
+  }
+
+  const payload = await verifySessionToken(token.value);
+  if (!payload || (payload.role !== 'admin' && payload.role !== 'secretariat')) {
     throw new Error('Unauthorized access');
   }
 }
@@ -305,8 +317,12 @@ export async function fetchSystemSettingsAction() {
 export async function updateSystemSettingsAction(updates: any) {
   await checkAuth();
   const supabase = getServiceSupabase();
+  
+  // Safely remove active_scan_mode as it might not exist in the DB schema yet
+  const { active_scan_mode, ...safeUpdates } = updates;
+  
   const { error } = await supabase.from('system_settings')
-    .upsert({ id: 1, ...updates });
+    .upsert({ id: 1, ...safeUpdates });
   if (error) throw new Error(error.message);
   return true;
 }
