@@ -124,7 +124,8 @@ export default function PortalScan() {
           setGlobalCheckpoint(cp);
           
           if (res.active_scan_mode) {
-             setScanType(res.active_scan_mode as "ENTRY" | "EXIT");
+             const newMode = res.active_scan_mode as "ENTRY" | "EXIT";
+             setScanType(newMode);
           }
           
           // Force checkpoint to registration if it's Day 3 and committee was active
@@ -424,13 +425,15 @@ export default function PortalScan() {
 
           <div className="space-y-2">
             <label className="text-sm font-medium text-emerald-400/80">Scan Mode</label>
-            <div className="grid grid-cols-2 gap-2 opacity-80 pointer-events-none">
+            <div className="grid grid-cols-2 gap-2">
               <button
+                onClick={() => setScanType("ENTRY")}
                 className={`rounded-xl py-2 text-sm font-bold transition-all ${scanType === "ENTRY" ? "bg-green-500 text-green-950 shadow-lg shadow-green-500/20" : "bg-black/50 text-green-500/50 border border-green-500/20"}`}
               >
                 ENTRY
               </button>
               <button
+                onClick={() => setScanType("EXIT")}
                 className={`rounded-xl py-2 text-sm font-bold transition-all ${scanType === "EXIT" ? "bg-rose-500 text-rose-950 shadow-lg shadow-rose-500/20" : "bg-black/50 text-rose-500/50 border border-rose-500/20"}`}
               >
                 EXIT

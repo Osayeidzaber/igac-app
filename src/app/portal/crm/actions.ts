@@ -317,11 +317,8 @@ export async function updateSystemSettingsAction(updates: any) {
   await checkAuth();
   const supabase = getServiceSupabase();
   
-  // Safely remove active_scan_mode as it might not exist in the DB schema yet
-  const { active_scan_mode, ...safeUpdates } = updates;
-  
   const { error } = await supabase.from('system_settings')
-    .upsert({ id: 1, ...safeUpdates });
+    .upsert({ id: 1, ...updates });
   if (error) throw new Error(error.message);
   return true;
 }
