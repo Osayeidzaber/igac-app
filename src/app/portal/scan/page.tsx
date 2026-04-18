@@ -434,7 +434,7 @@ export default function PortalScan() {
 
         {/* Dynamic Reader Box */}
         <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-black/50 shadow-2xl backdrop-blur-xl">
-          <div className="aspect-[4/5] w-full">
+          <div className="aspect-[4/5] w-full relative">
             {typeof window !== "undefined" && !window.isSecureContext ? (
                <div className="flex h-full flex-col items-center justify-center bg-red-500/20 text-center space-y-4 p-6 border border-red-500/50">
                  <AlertCircle className="h-10 w-10 text-red-500" />
@@ -446,21 +446,25 @@ export default function PortalScan() {
                    </p>
                  </div>
                </div>
-            ) : scanState === "idle" || scanState.startsWith("action") || scanState.startsWith("edit") || scanState === "success" || scanState === "error" ? (
-              <Scanner 
-                key={scannerKey}
-                onScan={handleScan}
-                onError={(err: any) => {
-                  setScanState("error");
-                  setMessage(err?.message || "Camera access denied or device unsupported.");
-                }}
-                formats={["qr_code"]}
-              />
             ) : (
-              <div className="flex h-full flex-col items-center justify-center bg-black/80 space-y-4 p-6">
-                <Loader2 className="h-10 w-10 text-orange-500 animate-spin" />
-                <p className="text-sm font-medium text-white animate-pulse">Running Secure Search...</p>
-              </div>
+              <>
+                <Scanner 
+                  key={scannerKey}
+                  onScan={handleScan}
+                  onError={(err: any) => {
+                    setScanState("error");
+                    setMessage(err?.message || "Camera access denied or device unsupported.");
+                  }}
+                  formats={["qr_code"]}
+                />
+                
+                {scanState === "verifying" && (
+                  <div className="absolute inset-0 z-10 flex h-full flex-col items-center justify-center bg-black/80 space-y-4 p-6">
+                    <Loader2 className="h-10 w-10 text-orange-500 animate-spin" />
+                    <p className="text-sm font-medium text-white animate-pulse">Running Secure Search...</p>
+                  </div>
+                )}
+              </>
             )}
           </div>
           

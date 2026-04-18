@@ -344,7 +344,7 @@ export function CommandCenterTab() {
                   stats.recentScans.map((scan: any) => (
                     <div key={scan.id} className="flex justify-between items-center bg-zinc-950/80 border border-white/5 pr-4 rounded-xl overflow-hidden group hover:border-white/10 transition-colors shadow-inner">
                       <div className="flex items-center">
-                        <div className={`w-1.5 h-[50px] flex-shrink-0 mr-4 shadow-xl ${scan.checkpoint === 'registration' ? 'bg-emerald-500 shadow-emerald-500/50' : 'bg-purple-500 shadow-purple-500/50'}`}></div>
+                        <div className={`w-1.5 h-[50px] flex-shrink-0 mr-4 shadow-xl ${scan.scan_type === 'EXIT' ? 'bg-rose-500 shadow-rose-500/50' : scan.checkpoint === 'registration' ? 'bg-emerald-500 shadow-emerald-500/50' : 'bg-purple-500 shadow-purple-500/50'}`}></div>
                         <div className="py-2">
                           <p className="text-xs font-bold text-white mb-1">{scan.full_name}</p>
                           <p className="text-[9px] uppercase font-black tracking-widest text-zinc-500 line-clamp-1">
@@ -353,8 +353,8 @@ export function CommandCenterTab() {
                         </div>
                       </div>
                       <div className="text-right flex flex-col items-end gap-1.5">
-                        <span className={`text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-md leading-none ${scan.checkpoint === 'registration' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-purple-500/10 text-purple-400 border border-purple-500/20'}`}>
-                           {scan.checkpoint}
+                        <span className={`text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-md leading-none ${scan.scan_type === 'EXIT' ? 'bg-rose-500/10 text-rose-400 border border-rose-500/20' : scan.checkpoint === 'registration' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-purple-500/10 text-purple-400 border border-purple-500/20'}`}>
+                           {scan.scan_type === 'EXIT' ? 'EXIT' : scan.checkpoint}
                         </span>
                         <p className="text-[10px] font-mono font-bold text-zinc-400">
                           {new Date(scan.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
